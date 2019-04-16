@@ -1,0 +1,142 @@
+处理常见反爬：
+	1.请求头headers：添加User-Agent、Referer、Cookie
+	2.使用代理IP
+	3.JS加密（抓取JS文件，找到加密方式，用python按同样方式加密即可）
+************************************************************************************************
+
+1. 模拟登陆（cookie）
+	1.什么是cookie、session
+	    cookie：通过在客户端记录的信息确定用户身份
+	    session：通过在服务端记录的信息确定用户身份
+
+2. 模拟登陆人人网（方法1）
+	**先登陆成功一次，抓取到cookie**
+	**按F12开启抓包，找到home（一般前几个），获取Requestes Headers**
+	**headers可定义大字典全写，也可以只写3个尝试**
+
+3. 模拟登陆人人网（方法2）
+	**使用session会话保持**
+	1. session会话使用步骤：
+		1.实例化一个session对象
+			session = requests.session()
+		2.让session对象去发送请求（get、post）
+			res = session.get(url,headers=headers)
+	
+	2.实现步骤：
+		1.找到登陆时发送用户名密码的url地址
+			两种方式去找：右键，检查输入框的位置，找Form表单中action、
+				      右键查看源代码搜form，找action
+			构造表单中用户名、密码input标签name值作为键，真正的用户名密码作为值，构成post的请求体data
+	
+
+
+			**第一步：把用户名和密码信息发给服务器
+			post_url = 'http://www.renren.com./Plogin.do'
+			data = {"email":"ljoepqp@163.com","password":''}
+			*创建session对象，可以保持cookie信息
+			session = requests.session()
+			*发送带有用户名和密码的请求，获取登陆后的cookie保存在session中
+			session.post(post_url,data=data,headers=headers)
+
+			**第二步：访问个人主页（第一步已经有了cookie）
+			url = 
+			res = session.get(url,headers=headers)
+			res.encoding = 'utf-8'
+			print(res.text)
+
+4. Ajax动态加载网站数据抓取
+	1.特点：滚动鼠标滑轮加载，页面局部刷新
+	2.目标：电影名称、评分
+	3.F12/抓包工具（XHR抓异步加载）
+		1.Request URL：GET的地址（JSON）
+		2.Query String：查询参数
+
+	4.抓取到的URL地址和查询参数：
+		https://movie.douban.com/j/chart/top_list?type=11&interval_id=100%3A90&action=&start=60&limit=20
+		
+		type: 11
+		interval_id: 100:90
+		action: 
+		start: 60
+		limit: 20
+
+6.Fiddler常用菜单
+	1.Inspectors：查看抓到的数据包的详细内容
+	整体分为：请求 和 响应 两部分
+	2.常用菜单
+	  **Headers：显示请求头
+	  **WebForms：显示post的数据<body>中
+	  **Raw：将整个请求显示为纯文本
+	3.注意：
+		1.post有道翻译：
+			Raw（post地址）
+			WebForms---<body>（Form表单数据）
+		2.Ajax动态加载：
+			Raw（json文件地址）
+			WebForm--<QueryString>(查询参数)
+
+7.selenium + phantomjs / Chorme网络爬虫组合
+	1.selenium
+		*web自动化测试工具，用于Web自动化测试
+		*可运行在浏览器上，根据指令操作浏览器，让浏览器自动加载页面
+		*只是工具，必须与第三方浏览器结合使用
+		*sudo pip3 install selenium
+	
+	2.phantomjs浏览器
+		*无界面浏览器（无头浏览器）
+		*在内存进行页面加载，运行高效
+
+8.chromedriver安装
+	1.下载
+		https：//chromedriver.storage.googleapis.com/index.html
+	2.安装
+		*查看本机chorme浏览器版本（设置-帮助-关于。。。）
+		*下载对应版本的chormedriver.exe(notes.txt)
+		*拷贝到python安装目录的Scripts目录下
+
+9.如何设置chromedriver无界面模式
+	*option = webdriver.ChromeOptions()
+	*option.set_headless()
+	*driver = webdriver.Chorme(options=option)
+10.常用方法：
+	1.浏览器对象（driver）
+		*driver.get(url) 
+		*driver.page_source:查看网页源代码
+		*driver.page_source.find('字符串')
+			作用：从html源码中搜索指定字符串
+			返回值：-1 查找失败
+		*driver.close():退出当前页
+		*driver.quit()：关闭浏览器
+		*driver.switch_to.frame(节点对象)   ***************!!!
+			作用：切换到子框架
+	
+	2.定位节点
+		1.单元素查找(只匹配第一个节点)
+			*driver.find_element_by_id('').text 获取文本内容
+			*driver.find_element_by_name('')
+			*driver.find_element_by_class('')
+			*driver.find_element_by_xpath('')
+		2.多元素查找
+			*driver.find_elements_by_...()
+	
+	3.节点对象操作
+		*ele.send_keys('') : 给输入框赋值
+		*ele.click()
+		*ele.text: 获取节点对象文本内容
+		*ele.get_attribute('href'):获取节点属性值
+
+11.qq邮箱登陆（switch_to.frame(....)）
+
+        *url：https://mail.qq.com/
+	*frame:    id：login_frame
+	*username：id: u
+	*password：id: p
+	*登陆按钮：id : login_button
+
+12.京东商品抓取
+	1.网址:https://www.jd.com/
+	2.目标：输入搜索商品
+		*商品名称
+		*商品价格
+		*评论数量
+		*商家名称

@@ -1,0 +1,127 @@
+1、概述
+	1.网络爬虫（网络爬虫、网络机器人）
+	  1.定义：抓取网络数据的程序
+	  2.用Python程序模仿人点击浏览器访问网站
+	  3.目的：获取大量数据分析
+	2.企业获取数据的方式
+	  1.公司自有数据
+	  2.第三方数据平台购买
+	  3.爬虫爬取数据：市场上没有，价格太高
+	3.Python做爬虫优势
+	  请求模块、解析模块丰富成熟，强大的Scrapy爬虫框架
+	  PHP：对多线程、异步支持不太好
+	  Java：代码笨重，代码量大
+	  C/C++：虽然效率高，但是代码成型慢
+	4.爬虫分类
+	  1、通用网络爬虫（搜索引擎，遵守robots协议）
+	    robots协议：网站通过robots协议告诉搜索引擎哪些页面可抓，哪些不可抓
+	       （https://www.baidu.com/robots.txt）
+	  2、聚焦网络爬虫
+	    自己写的爬虫程序
+	5.爬取数据步骤
+	  1.确定URL地址
+	  2.发请求，获取响应
+	  3.解析响应（提取有两种：所需数据，保存即可/页面中的新的URL，继续第2步）
+
+2、WEB回顾
+	1、URL：统一资源定位符
+	  scheme://host:[:port]/path/.../[?query-string][#anchor]
+	   协议    域名  端口  资源路径    查询参数       锚点
+	  http://quote.eastmoney.com/sz002228.html?from=BaiduAladdin&pn=10#detail
+	  ###多个查询参数之间要用 & 做分隔###
+	  query-string: 查询参数
+	  anchor： 锚点（跳转到网页指定的位置）
+	
+	2、HTTP和HTTPS
+	  HTTP:  80
+	  HTTPS：443（HTTP+SSL）,HTTP升级版，加了SSL安全套接层，在传输层对数据加密，保障数据传输安全
+	
+	3、请求头（Request Headers）
+		#接收数据类型
+		Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+		#是否支持压缩/解压缩（尽量不写）
+		Accept-Encoding:gzip, deflate, br
+		#支持的语言
+		Accept-Language:zh-CN,zh;q=0.9
+		#缓存控制（max-age >0:直接从浏览器缓存中提取；max-age <=0:向服务器发请求确认，该资源是否修改）
+		Cache-Control:max-age=0
+		#是否支持长连接
+		Connection:keep-alive
+		#服务器可能检查（之后会说）
+		Cookie:
+		#是否自动升级HTTPS请求
+		Upgrade-Insecure-Requests:1
+		***#浏览器信息（会被检查）
+		User-Agent:Mozilla/5.0 (Windows NT 10.0; WOW64) 
+		           AppleWebKit/537.36 (KHTML, like Gecko) 
+			   Chrome/63.0.3239.132 Safari/537.36
+	
+	4、GET和POST
+		GET：查询参数会在URL地址上显示出来
+		POST：Form表单提交，传输大文本，数据隐藏在Form表单
+
+3、请求模块（urllib.request）
+	1. urllib.request.urlopen('url地址')
+	  作用：向网站发起请求并获取响应对象
+	  字节流 = response.read()
+	  字符串 = response.read().decode('utf-8')
+	  ****不支持重构User-Agent
+
+	2.（重要！）urllib.request.Request('URL',headers={})
+	  1.创建请求对象(目的：用什么请求头和地址)
+		request = urllib.request.Request('URL',headers={})
+	  2.发送请求获取响应对象
+		response = urllib.request.urlopen(request)
+	  3.获取响应内容
+	  	html = response.read().decode('utf-8')
+	3. 响应对象（response）方法
+	  1. read（）
+	  2. getcode():返回HTTP响应码
+		200：成功
+		302：临时转移至新的URL
+		404：页面未找到
+		500：服务器出错
+	
+4、编码模块（urllib.parse）(主要对中文进行编码)
+	1.urllib.parse.urlencode({})  #字典  例：wd = 美女
+		a.http://www.baidu.com/s?wd={}&pn={}.format('美女','20')
+		b.或者字符拼接'···.com/s?' + '```' 
+	2.urllib.parse.quote('字符串')
+	  string = urllib.parse.quote('冯绍峰')
+	  url = 'http://www.baidu.com/s?wd={}'.format(string)
+	3.urllib.parse.unquote('%8924iwhsjfj#@')  #解码
+
+5、urllib、urllib2、urllib库的关系
+	1. python2中
+	    urllib：url编码（urllib.urlencode({})）
+	    urllib2: 发送请求获得响应
+	2. python3中
+	    将urllib和urllib2合并，统称为urllib库
+	     
+6、案例：百度贴吧抓取数据
+
+7、正则解析模块（re）
+    1.re模块的使用流程
+      1.写法1：
+          r_list = re.findall('正则','字符串')
+      2.写法2：
+          1.创建一个编译对象
+		p = re.compile('正则表达式',re.S)  ####re.S 表示可以匹配\n
+	  2.进行字符串匹配
+	        r_list = p.findall('字符串')
+	
+     2.元字符
+        . :匹配任意字符(但不包括\n)
+	\d:1个数字
+	\s:空白字符
+	\S:非空白字符
+	[]:包括[]内容
+	*：0次或多次
+	+：1次或多次
+	？：0次或1次
+	{m}：m次
+     3.贪婪匹配和非贪婪匹配
+     4.正则表达式的分组
+     	技巧：先按照整体匹配，然后再匹配；如果有两个以上分组，则以元组形式显示
+	(\w+)\s(\w+)------[('a','b'),('c','d')]
+        (\w+)\s\w+------['a','c']

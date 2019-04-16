@@ -1,0 +1,209 @@
+Day06回顾
+1、京东爬虫汇总
+  1、执行JS脚本,把进度条拉到最下面
+    * driver.execute_script(
+        'window.scrollTo(0,document.body.scrollHeight)'
+       )
+  2、可以利用节点对象的 .text 属性获取子孙节点所有的文本内容,然后再对字符串进行处理
+  3、等待页面加载的方式
+    * 强制等待 ：time.sleep(n)
+    * 隐性等待 ：driver.implicitly_wait(n)
+      ** 等待页面所有元素加载完成,进行下一步
+    * 显示等待 ：等待指定的元素加载,然后下一步
+      ** 查找元素 
+        from selenium.webdriver.common.by import By
+      ** 判断元素
+        from selenium.webdriver.support import expected_conditions as EC
+      ** 显示等待
+        from selenium.webdriver.support.wait import WebDriverWait
+      ** WebDriverWait(driver,20,0.2).until(EC.presense_of_element_located((By.ID,'kw')))
+          ***0.2为检查时间间隔***
+	  ***located的参数为元组***
+  4、chromedriver添加代理
+     * from selenium import webdriver
+     * options = webdriver.ChromeOptions()
+     * options.add_argument('--proxy-server=http:')
+     * driver = webdriver.Chrome(options=options)
+2、多线程爬虫
+  1、URL队列  ：put(url)
+  2、解析队列 ：先get(url)再put(html)
+  3、创建多线程去爬取
+3、边采集边解析
+  while True:
+      try:
+          ...get(block=True,timeout=3)
+	  ...
+      except:
+          break
+4、先采集后解析
+  while True:
+      if not parse_queue.empty():
+          ...get()
+      else:
+          break
+5、BeautifulSoup
+  1、使用流程
+    * from bs4 import BeautifulSoup
+    * soup = BeautifulSoup(html,'lxml')
+    * r_list = soup.find_all('',attrs={'':''})
+  2、支持解析库
+    * lxml 、html.parser、xml
+  3、soup.find_all('div',attrs={'class':'abc'})
+  4、soup.find('div',attrs={'class':'abc'})
+  5、节点对象.get_text()
+     节点对象.text
+************************************************
+Day07笔记
+1、scrapy框架
+  1、定义 ：异步处理框架,可配置和可扩展程度相当高,使用最广泛的爬虫框架
+2、scrapy框架五大组件
+  * 引擎(Engine) ：整个框架核心
+  * 调度器(Scheduler) ：接受从引擎发过来的URL
+  * 下载器(Downloader)：获取响应对象
+  * 爬虫文件(Spider)  ：解析数据
+  * 项目管道(Item Pipeline) ：数据处理
+  ** 下载器中间件(Downloader Middlewares)
+     请求从调度器 -> 下载器,做拦截处理
+  ** 蜘蛛中间件(Spider Middlewares)
+     响应从下载器 -> 爬虫程序,做拦截处理
+  ** item ：定义爬取的数据结构
+3、制作爬虫项目步骤
+  * 新建项目
+    scrapy startproject 项目名
+  * 创建爬虫文件
+    cd 项目目录
+    scrapy genspider 文件名 域名
+  * 明确目标(items.py)
+  * 写爬虫文件(数据提取)
+  * 数据处理(pipelines.py)
+  * 全局配置(settings.py)
+  * 运行爬虫
+    scrapy crawl 爬虫名
+4、项目目录结构
+  Baidu
+  ├── Baidu              # 项目目录
+  │   ├── items.py       # 定义数据结构
+  │   ├── middlewares.py # 中间件
+  │   ├── pipelines.py   # 数据处理
+  │   ├── settings.py    # 全局配置
+  │   └── spiders
+  │       └── baidu.py   # 爬虫文件
+  └── scrapy.cfg         # 基本配置文件
+5、settings.py详解
+  * USER_AGENT = 'Mozilla/5.0'
+  * 是否遵守robots协议,一定改为False
+    ROBOTSTXT_OBEY = False
+  * 设置最大并发量(默认16)
+    CONCURRENT_REQUESTS = 10
+  * 下载延迟时间
+    DOWNLOAD_DELAY = 0.2
+  * 请求头headers
+    DEFAULT_REQUEST_HEADERS = {}
+  * 项目管道(项目目录名.pipelines.类名)
+    优先级1-1000,数字越小优先级越高
+    ITEM_PIPELINES = {
+       'Baidu.pipelines.BaiduPipeline': 300,
+       'Baidu.pipelines.BaiduMongoPipeline': 100,
+    }
+6、抓去百度首页源码,保存到文件中
+  1、scrapy startproject Baidu
+  2、cd Baidu
+  3、scrapy genspider baidu www.baidu.com
+  4、items.py(此项目不用改)
+  5、baidu.py(爬虫文件)
+     def parse(self,response):
+        print('***************')
+  6、pipeline.py(此项目不用改)
+  7、settings.py
+     ROBOTSTXT_OBEY = False
+     DEFAULT_REQUEST_HEADERS = {'User-Agent':''}
+  8、scrapy crawl baidu (在项目目录下执行)
+7、pycharm执行scrapy项目
+  * 创建begin.py(和scrapy.cfg同路径)
+  * begin.py
+     from scrapy import cmdline
+     cmdline.execute('scrapy crawl baidu'.split())
+8、yield回顾
+  1、作用 ：把1个函数当作1个生成器来使用
+  2、特点 ：让函数暂停,等待下一次调用
+9、Csdn页面抓取
+  1、URL：https://blog.csdn.net/java123456789010/article/details/89061997
+  2、标题、发布时间、阅读数
+     标题 ： //h1[@class="title-article"]/text()
+     时间 ： //span[@class="time"]/text()
+     数量 ： //span[@class="read-count"]/text()
+  3、实现
+     * Csdn
+     * csdn
+10、知识点
+  * extract() ：获取选择器对象中的文本内容
+    response.xpath('')
+      结果 ：[<selector...data='文本',<selector..]
+    response.xpath('').extract()
+      结果 ：['文本1','文本2']
+  * pipelines.py中必须有1个函数叫：
+    def process_item(self,item,spider):
+        return item
+  * 警告级别(日志文件settings.py)
+    LOG_LEVEL = ''
+    LOG_FILE = '文件名.log'
+    ** LOG_FILE一旦设置,所有信息将会写入到该文件*
+    ** 设置LOG_LEVEL后,只会显示该级别及以上信息**
+    **5层日志级别(从到到低排列)**
+    CRITICAL ：严重错误
+    ERROR    ：普通错误
+    WARNING  ：警告信息
+    INFO     ：一般信息
+    DEBUG    ：调试信息
+11、盗墓笔记小说抓取
+  1、起始URL ：http://www.daomubiji.com/
+  2、目标
+     * 抓取系列小说的 
+       标题、章节数量、章节名称、章节链接
+     * 把所有章节小说内容抓取到本地文件
+       七星鲁王-第一章-血尸.txt
+  3、准备工作(xpath)
+     ******* 一级界面********		//article[@class="article-content"]/a/@href
+     ******** 二级界面*******
+     * r_list = response.xpath('//article[@class="excerpt excerpt-c3"])
+      结果 ：[节点对象1,节点对象2]
+     获取info ：info = article.xpath('./a/text()').extract()[0].split()
+     * for r in r_list:
+         卷名 ：info[0]
+         数量 ：info[1]
+         名称 ：info[2]
+         章节链接 ：r.xpath('./a/@href').extract()[0] 
+     
+     *********三级页面************
+      //article[@class="article-content"]/p/text()
+      ['段落1','段落2','段落3','...']
+      '\n'.join(L)
+
+*********************************************
+作业：
+1、Daomu项目报错处理一下(list out of range)
+2、按照章节保存到本地文件(小说的内容)
+3、腾讯招聘案例(二级页面),用scrapy改写一下
+
+
+
+
+
+
+
+
+
+
+问题：:0: UserWarning: You do not have a working installation of the service_identity module: 'cannot import name 'opentype''.  Please install it from <https://pypi.python.org/pypi/service_identity> and make sure all of its dependencies are satisfied.  Without the service_identity module, Twisted can perform only rudimentary TLS client hostname verification.  Many valid certificate/hostname mappings may be rejected.
+解决：
+sudo pip3 install -I -U service_identity
+
+
+
+
+
+
+
+
+
+

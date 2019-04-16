@@ -1,0 +1,109 @@
+1. 腾讯招聘作业
+	strip().replace('<p>','').replace('</p>','')  去掉多余符号
+
+2. requests.get()方法参数
+	1.查询参数（params）：字典  (不用编码和拼接)
+		res = requests.get(url,parmas=parmas,headers=..)
+		*自动对parmas字典编码，然后和url拼接，发请求
+
+	2.代理参数（proxies）：字典 （反反爬）
+		1.获取代理IP的网站
+			西刺代理
+			快代理		
+			全网代理
+		2.普通代理：
+			1.格式： proxies = {'协议'：'协议：//IP:端口号'}
+					url = 'http://httpbin.org/get'
+					headers = {'User-Agent':'Mozilla/5.0'}
+
+					#定义一个代理
+					proxies = {'https':'https://159.224.13.29:61366',
+						    'http':'http://159.224.13.29:61366'
+					}
+					#发送请求
+					res = requests.get(url,headers=headers,proxies=proxies)
+					res.encoding = 'utf-8'
+					html = res.text
+
+					print(html)
+			2. 测试网站   #测试网站，可以显示ip
+				1.http://httpbin.org/get
+				2.https://whatismyip.com
+		3. 私密代理：
+			1.格式：proxies = {'协议':'协议://用户名:密码@IP:端口号'}
+				proxies = {'http':'http://liyang:123456@178.122.89.12:86751'}
+
+	3.web客户端验证（auth）：元组
+		1.格式：auth = （'用户名'，'密码'）
+			auth = （'tarena','code_2013'）
+		2.爬取笔记网站：
+			1.url = http://code.tarena.com.cn/
+			2.正则：<a href="AIDCode/">AIDCode/</a>
+				<a href=(.*?)/(.*?)</a>
+
+	4.SSL证书认证（verify）
+		1.格式：verify = True  （默认，进行SSL证书认证）
+			verify = False  不对URL做认证 
+			**针对于没有做证书认证的HTTPS的网站**
+		2.res = requests.get(url,..verify=False)
+		3.抛出异常：SSLError
+		  解决此异常：----添加参数 verify=False
+	
+	5. timeout
+
+3. requests.post()方法参数
+	1.requests.post（url,data=data,headers=headers）
+	2. data:字典，Form表单数据（不用编码解码，都是自动）
+
+4. 有道翻译破解案例（post）
+	看第四天笔记
+*******************************************************************************************************
+1. xpath解析模块
+	1.在XML文档中查找信息的语言，同样适用于HTML文档的检索
+
+	2.xpath辅助工具
+		1.Chorme插件：Xpath Helper（打开/关闭：ctrl+shift+x）
+		2.Firefox插件：Xpath Checker
+		3.xpath编辑工具：XML Quire
+	3.**安装**
+		把 插件.crx 鼠标拖拽到浏览器开发者模式释放，重启浏览器
+	4.xpath匹配演示
+		1.查找所有的book节点： //book
+		2.查找所有book下title子节点中，lang属性值为'en'的节点： //book/title[@lang="en"]
+		3.查找bookstore下的第2个book节点下title子节点： //bookstore/book[2]/title
+		4.查找所有book/title中lang属性的值： //book/title/@lang 
+	5.选取节点
+		1. //：所有节点中查找
+			//price   //book//price
+		2. @:  获取节点属性值
+			**条件： //div[@class='movie-item-info'>]
+			**取值： //div//a/@src
+		3. |:  匹配多路径
+			xpath表达式1或表达式2： //tr[@class="even"] | //tr[@class="odd"]
+	6.函数
+		1.contains（）
+			匹配一个属性值中包含某些字符串的节点
+			  //title[contains(@lang,'e')]
+				//div[contains(@id,'qiushi_tag_')]
+		2.text(): 获取文本
+			//book/title/text()
+		
+2.lxml库及xpath使用
+	1.lxml库及xpath使用
+		1.lxml安装：sudo pip3 install lxml
+		2.使用流程：
+			1.导模块：from lxml import etree
+			2.创建一个解析对象：parse_html = etree.HTML(html)
+			3.调用xpath匹配：
+				r_list = parse_html.xpath('xpath表达式')
+			*******只要调用了xpath，结果一定是列表*************
+
+3.腾讯招聘案例（xpath）
+	1.基准xpath表达式：匹配所有职位的节点对象（tr）
+		//tr[@class="even"] | //tr[@class="odd"]
+	2.for循环拿出每一个节点对象，做数据提取
+		for tr in [节点对象1，节点对象2，...]：
+			job_link = tr.xpath('./td[1]/a/@href')[0]
+			job_name = tr.xpath('./td[1]/a/text()')[0]
+
+

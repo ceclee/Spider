@@ -1,0 +1,76 @@
+
+1. 豆瓣爬虫
+	1.输出字体变色，一般用于菜单
+		print（'\033[31m老师积分\033[0m')
+
+2.京东爬虫
+	//div[@id="J_goodsList"]//li
+
+3.selenium+chromedriver如何设置代理IP
+	1.options = webdriver.ChromeOptions()
+	2.options.add_argument('--proxy-server=http://')
+	3.browser = webdriver.Chrome(options=options)
+
+4.等待页面加载方式
+	1.强制等待（time.sleep(n)）
+	   *缺点：不智能，设置时间短，导致有些元素加载不出来，时间长则浪费时间
+	2.隐性等待（可以）：driver.implicitly_wait(n)
+	   *定义：设置时间，指定时间内完成，则下一步，否则会抛出异常
+	   *特点：全局性，程序开头设置，整个程序有效
+	   *缺点：整个页面未加载完，我们需要的元素已加载，还需要继续等待
+	3.显性等待（推荐！）：导入WebDriverWait模块
+	   *定义：程序每隔0.5秒去检查（指定元素），若成立则下一步，超过最长时间会抛出异常
+
+5.*****多线程爬虫*****
+	系统分配资源的最小单位：进程 / 系统分配内核的最小单位：线程
+	1.应用场景：
+		**多进程：大量密集计算
+		**多线程：IO操作（本地和网络IO）
+	2.原理：见图
+	3.知识点：
+		1.队列（from multiprocessing import Queue）
+			** q = Queue()
+			** q.put(url)
+			** q.get()  (注意空会阻塞) -----q.get(block=True（默认）,timeout=1):超时抛异常
+			** q.empty()  (True为空；False 可以继续get)
+		
+		2.线程模块（from threading import Thread）
+			** t = Thread(target=函数名) 
+			** t.start()  -----------------创建并启动线程
+			** t.join()------阻塞等待回收线程
+		
+		****线程创建回忆***
+		threads = []
+		for i in range(5):
+			t = Thread(target=函数名)
+			threads.append(t)
+			t.start()
+		for t in threads:
+			t.join()
+
+6.小米应用商店数据抓取（多线程）
+	1.url：百度搜 小米应用商店
+	2.目标：应用分类（聊天社交）
+		**应用名称
+		**应用链接
+	3.抓JSON地址及查询参数：F12或抓包工具
+		*GET地址：GET http://app.mi.com/categotyAllListApi?page=3&categoryId=2&pageSize=30
+		*查询参数：
+			params = {
+				'page':????????,
+				'categoryID':'2',
+				'pagesize':'30'
+				}
+
+7.BeautifulSoup解析模块
+	1.定义：HTML和XML的解析器，依赖于lxml
+	2.安装：sudo pip3 install beautifulsoup4
+	3.使用流程
+		**from bs4 import BeautifulSoup
+		**soup = BeautifulSoup(html,'lxml')
+		**r_list = soup.find_all(条件)
+	4.BeautifulSoup支持的解析库
+		1.lxml:速度快，文档容错能力强
+		2.html.parser：标准库，都一般
+		3.xml：速度快，文档容错能力强
+8.链家二手房

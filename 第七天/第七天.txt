@@ -1,0 +1,135 @@
+1.scrapy框架
+	1.定义：异步处理框架，可配置和可扩展程度相当高，使用最广泛的爬虫框架
+
+2.scrapy框架的五大组件：
+	*引擎（Engine）：整个框架的核心
+	*调度器（Scheduler）:接受从引擎发过来的URL
+	*下载器（Downloader）：获取响应对象
+	*爬虫文件（Spider）：解析数据
+	*项目管道（Item Pipeline）：数据处理
+	**下载器中间件（Downloader Middlewares）：请求从调度器->下载器，做拦截处理
+	**蜘蛛中间件（Spider Middlewares）：响应从下载器->爬虫程序，做拦截处理
+	**item：定义爬取的数据结构
+
+3.制作爬虫项目步骤
+	*新建项目：scrapy startproject 项目名
+	*创建爬虫文件：
+		a.cd 项目目录  
+		b.scrapy genspider 文件名 域名
+	*明确目标（items.py）
+	*写爬虫文件（数据提取）
+	*数据处理（pipeline.py）
+	*全局配置（settings.py）
+	*运行爬虫：scrapy crawl 爬虫名
+
+4.项目目录结构
+	  Baidu
+	├── Baidu                  *项目目录
+	│   ├── __init__.py      
+	│   ├── items.py	   *定义要爬取的数据结构 （name = scrapy.Field()）
+	│   ├── middlewares.py     *中间件
+	│   ├── pipelines.py	   *数据处理
+	│   ├── __pycache__	
+	│   ├── settings.py	   *全局配置
+	│   └── spiders
+	│       ├── baidu.py       *爬虫文件
+	│       
+	└── scrapy.cfg		   *基本配置文件
+
+5.settings.py详解
+	*USER_AGENT = 'Baidu (+http://www.yourdomain.com)'
+	*是否遵循robots协议，一定改为False
+		ROBOTSTXT_OBEY = False
+	*设置最大并发量（默认16）
+		CONCURRENT_REQUEST = 10
+	*下载延迟时间
+		DOWNLOAD_DELAY = 0.2
+	*请求头headers
+		DEFAULT_HEADERS = {}
+	*项目管道（项目目录名为.pipelines.类名）
+		优先级1-1000，数字越小优先级越高
+		ITEM_PIPELINES = {
+					}
+
+6.抓取百度首页源码，保存到文件中
+	1.scrapy startproject Baidu
+	2.cd Baidu
+	3.scrapy genspider baidu www.baidu.com
+	4.items.py
+	5.baidu.py(爬虫文件)
+		def parse(self,response):
+			print(....)
+			with open('baidu.html','w') as f:
+				f.write(response.text)
+	6.pipelines.py
+	7.settings.py  
+		ROBOESTXT_OBEY = False
+		DEFAULT_REQUEST_HEADERS = {'User-Agent'：'...'}
+	8.scrapy crawl baidu(在项目目录下执行)
+
+7.pycharm执行scrapy项目
+	1.创建begin.py（和scrapy.py同路径）
+	2.begin.py
+		from scrapy import  cmdline
+		cmdline.execute('scrapy crawl baidu'.split())
+
+8.yield回顾
+	1.作用：把1个函数当作1个生成器来使用
+	2.特点：让函数暂停，等待下一次调用
+
+
+9.CSDN页面抓取
+	1.url：https://blog.csdn.net/CSDNedu/article/details/89147477
+	2.标题、时间、阅读数
+	 标题： //h1[@class="title-article"]
+	 时间： //span[@class="time"]
+	 阅读数： //span[@class="read-count"]
+	3.Csdn实现
+
+10. 知识点
+	*extract():获取选择器对象中的文本内容
+		 response.xpath('')
+			结果：[<sector...data='文本1'>，<sector...data='文本2'>]
+		 response.xpath.extract()
+			结果：['文本1'，'文本2']
+	
+	*pipelines.py中必须有一个函数叫：
+		def process_item(self,item,spider):
+			return item
+	
+	*警告级别（日志文件settings.py）
+		 LOG_LEVEL = ''
+		 LOG_FILE = '文件名.log'  #warning警告会被写入到这个文件里面
+		 **LOG_LEVEL 设置后只会显示该级别及以上级别信息**
+		 **LOG_FILE 一旦设置所有信息将会被写入到该文件**
+
+	 ***5层日志级别：
+	 	CRITICAL:严重错误
+		ERROR:普通错误
+		WARNING:警告信息
+		INFO:一般信息
+		DEBUG:调试信息
+	
+		
+11. 盗墓笔记小说抓取
+	1.起始url：http://www.daomubiji.com/
+	2.目标：
+		*抓取系列小说的 ----标题、章节数量、章节名称、章节链接
+		*把所有章节小说内容抓取到本地文件
+			七星鲁王~第一章-血尸.txt
+	3.准备工作（xpath）：
+		*一级界面 xpath： //a//div[@class="homebook"]/h2/text()
+		*二级界面 xpath：
+			章节链接： //div[@class="excerpts"]//a/@href  
+			七星鲁王 第四章 真相 --------  //div[@class="excerpts"]//a[@href]/text()
+		        r_list = response.xpath (以上.extract（）)----['七星鲁王 第四章 真相','七星鲁王 第五章 史努']
+			*for r in r_list:
+				卷名：r.split()[0]
+				数量：r.split()[0]
+				名称：r.split()[0]
+				章节链接： //div[@class="excerpts"]//a/@href
+			
+			
+			
+		
+		*三级界面 xpath： 

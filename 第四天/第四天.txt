@@ -1,0 +1,88 @@
+
+1.猫眼电影（xpath）讲解
+	1. 基准xpath表达式：//dl[@class="board-wrapper"]//dd
+	2. 遍历节点对象列表
+		1. 名称：'./a/@title'
+		2. 主演：'.//p[@class="star"]/text()'
+		3. 时间：'.//p[@class="releasetime"]/text()'
+
+		***('\n'、''、' '.join(list)) list里面需要是字符！
+
+2.腾讯招聘作业讲解
+
+3.百度贴吧图片抓取
+	1.目标：指定吧所有图片
+	2.思路：
+		1.获取贴吧的URL规律
+			https://tieba.baidu.com/f?kw=？？&pn=50
+		2.获取一页中的所有帖子的链接（xpath）
+			[t1,t2,t3..]
+		3.对每个帖子发请求，获取图片链接（xpath）
+			[image1,image2,image3..]
+		4.对每个图片链接发请求，wb方式保存本地
+	3.中文思路
+		for 1个帖子链接 in [t1,t2,t3....t50]:
+			img_list = parse_html.xpath(表达式)
+			for img in img_list:
+				对图片链接发请求，保存到本地
+	4.准备工作
+		1.贴吧页面url规律
+			https://tieba.baidu.com/f?kw=？？&pn=50
+		2.提取帖子链接xpath
+			//div[@class=]
+		3.提取图片链接xpath
+			
+		4.提取视频链接xpath
+			//div[@class="video_src_wrapper"]/embed/@data-video
+		*****百度对响应内容作了更改，向一个帖子发请求获取响应内容到本地，进行页面分析*****
+
+4.requests.post()
+	1.参数名：data->字典
+	2.requests.post（url，data=data，headers=headers）
+	3.data：Form表单数据，字典，不用编码和转码
+
+5.有道翻译破解案例（post，js加密）
+	1.目标：终端输入翻译的单词，返回翻译结果
+	2.步骤：
+		1.F12进行抓包，多抓几次来观察Form Data表单数据变化(salt、sign、ts、bv）
+		2.为js文件加密，抓取到js文件，分析js代码，找到加密的算法
+		3.F12，重新访问有道，抓取js文件，找到fanyi.min.js，Preview选项查看js代码（复制到本地）
+		4.ctrl+f搜索关键词（salt，sign），找到加密方式，并用python语句实现加密
+		5.用python语句实现这四个字段的加密
+			1.ts：js-----"" + (new Date).getTime()
+				1554364961210
+			      python------r = int(time.time()*1000)
+
+			2.bv: js----- t = n.md5(navigator.appVersion)
+				***此值不变，直接在程序中复制一个即可***
+
+			3.salt：js-----i = r + parseInt(10*Math.random(),10);
+				i = str(int(time.time()*1000)) + str(random.randint(0,10))
+				
+			4.sign: js-----n.md5("fanyideskweb" + e + i + "1L5jaieoir@8iur")
+					**e为要翻译的单词
+				python---- from hash import md5
+					   string = 'xxxxxx'
+					   pwdobj = md5()
+					   pwdobj.update(string.encode('utf-8'))
+					   sign = pwdobj.hexdigest()
+					   print(sign)
+
+
+
+
+	第一次（hi）：
+		salt: 15543649612102
+		sign: 1811c165edc30ae3f5f7bfe1f3a7e0d9
+		ts: 1554364961210
+		bv: 617939f69fb18f112aa988d6038ae43f
+		
+	第二次（hello）：
+		salt: 15543652048607
+		sign: a393ed46a7741d6a62b52d3fb4444f9b
+		ts: 1554365204860
+		bv: 617939f69fb18f112aa988d6038ae43f
+
+6.有道案例总结：
+	1.headers中注意： User—Agent、Referer、Cookie
+	2.爬虫敏感词： salt、sign

@@ -1,0 +1,174 @@
+Day07回顾
+1、scrapy框架 ：异步处理框架
+  1、组成
+    Engine、Spider、Scheduler、Downloader、Item Pipeline、Downloader Middlewares、Spider Middlewares
+  2、抓取流程
+    * Engine开始通栏全局,向Spider索要URL
+    * Engine拿到URL后,交给Scheduler入队列
+    * Scheduler将请求出队列,通过Downloader Middlewares交给Downloader下载
+    * Downloader下载完成,把response交给Spider
+    * Spider解析完成后
+      把数据交给Item Pipeline处理
+      把新的需要跟进的URL交给Engine,继续循环
+2、创建项目流程
+  * scrapy startproject Lianjia
+  * cd Lianjia
+  * scrapy genspider lianjia lianjia.com
+  * 定义数据结构(items.py)
+    import scrapy
+    class LianjiaItem(scrapy.Item):
+      house_name = scrapy.Field()
+      house_price = scrapy.Field()
+  * 写爬虫文件(lianjia.py)
+    import scrapy
+    class LianjiaSpider(scrapy.Spider):
+      name = 'lianjia'
+      allowed_domains = ['lianjia.com']
+      start_urls = ['http://www.lianjia.com/']
+      def parse(self,response):
+          ... ...
+	  yield item
+  * 项目管道(pipelines.py)
+    class LianjiaPipeline(object):
+      def process_item(self,item,spider):
+        return item
+  * 全局配置(setting.py)
+    ROBOTSTXT_OBEY = False
+    DEFAULT_REQUEST_HEADERS = {}
+    ITEM_PIPELINES = {
+      'Lianjia.pipelines.LianjiaPipeline' : 100,
+    }
+  * 终端运行爬虫
+    scrapy crawl lianjia
+  * pycharm运行爬虫
+    新建begin.py(和scrapy.cfg同路径)
+    from scrapy import cmdline
+    cmdline.execute('scrapy crawl lianjia'.split())
+3、response.xpath('')
+  * 列表,元素为选择器对象
+    extract()：提取文本内容,将列表中所有元素序列化为Unicode字符串
+4、数据传递
+  * 数据交给管道 ：yield item
+  * URL交给调度器：
+    yield scrapy.Request(url,callback=函数名)
+  * 将item对象传递给下一个解析函数(meta)
+    yield scrapy.Request(url,meta={'item':item},..)
+    * 下一个解析函数提取item
+      item = response.meta['item']
+5、settings.py常用变量
+  * LOG_LEVEL = ''
+  * LOG_FILE = ''
+6、日志级别
+  DEBUG < INFO < WARNING < ERROR < CRITICAL
+***********************************************
+Day08笔记
+1、腾讯招聘案例
+2、存入MongoDB数据库(scrapy)
+  1、在settings.py中定义相关变量
+     MONGO_HOST = ''
+     MONGO_PORT = 27017
+     MONGO_DB = ''
+     MONGO_SET = ''
+  2、在pipelines.py中新建管道类
+     import pymongo
+     from .settings import *
+     class TencentMongoPipeline(object):
+         def process_item(self,item,spider):
+	     return item
+	 def close_spider(self,spider):
+	     ** 收尾工作代码 **
+  3、settings.py中设置并开启项目管道
+     ITEM_PIPELINES = {'':100}
+3、存入MySQL数据库 
+  * 建库建表
+    create database tencentdb charset utf8;
+    use tencentdb;
+    create table tencentset(
+    name varchar(100),
+    type varchar(50),
+    address varchar(50),
+    number tinyint
+    )charset=utf8;
+4、远程存入MySQL数据库
+  1、开启远程连接
+     sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf
+       * 把 #bind-address=127.0.0.1 加#注释
+     sudo /etc/init.d/mysql restart
+  2、添加授权用户
+     mysql>grant all privileges on *.* to 'rabbit'@'%' identified by '123456' with grant option;
+     mysql>flush privileges;
+5、Ubuntu中防火墙(ufw)基本操作
+  * 打开 ：sudo ufw enable
+  * 查看 ：sudo ufw status
+  * 关闭 ：sudo ufw disable
+  * 添加规则 ：sudo ufw allow 端口号
+6、csv、json文件操作(-o选项)
+  * scrapy crawl 爬虫名 -o 文件名.csv
+  * scrapy crawl 爬虫名 -o 文件名.json
+  * 在settings.py中设置导出编码  
+    FEED_EXPORT_ENCODING = 'utf-8'
+  ** scrapy 1.5版本csv文件导出(windows)出现空行(修改源码解决)
+    Python安装目录\Lib\site-packages\scrapy\exporter.py添加：
+    self.stread = io.TextIOWrapper(
+      file,
+      newline='',
+      ... )
+7、非结构化数据爬取(ImagesPipeline)
+   * 继承ImagesPipeline类,重写类中方法实现
+8、图片管道(360美女图片抓取)
+  1、抓包工具Fiddler抓取数据
+    * Raw的GET地址 ：http://image.so.com/zj?
+    * WebForms下QueryString ：
+      ch	beauty
+      sn	0 30 60 90 120 150
+      listtype	new
+      temp	1
+    * 图片链接 ：img['qhimg_url']
+    * 思路 ：sn的值在变,0表示1-30张,30表示31-60张,拼接多个URL地址,分别去发请求
+      http://image.so.com/zj?ch=beauty&sn=0&listtype=new&temp=1
+      http://image.so.com/zj?ch=beauty&sn=30&listtype=new&temp=1
+      http://image.so.com/zj?ch=beauty&sn=60&listtype=new&temp=1
+      http://image.so.com/zj?ch=beauty&sn=90&listtype=new&temp=1
+  2、知识点总结
+    * items.py中定义图片链接数据结构
+    * 爬虫文件中重写start_requests()方法
+      去掉原来的start_urls,自定义解析函数
+    * 管道文件继承图片管道类ImagesPipeline
+    * 重写ImagesPipeline中方法
+    * settings.py中设置保存图片路径(IMAGES_STORE)
+  3、注意 
+    * Windows中指定路径需要加双\
+      IMAGES_STORE = 'D:\\So\\Images'
+9、盗墓笔记案例完善(异常处理、保存到本地文件)
+   * 卷名-章节数-名称.txt
+	info :
+	if len(info) == 3:
+		['蛇沼鬼城（上）','第十二章','星盘']
+		info[0]
+		info[1]
+		info[2]
+	elif len(info) == 2:
+		['盗墓笔记8','第一章（二）']
+		info[0]
+		info[1]
+		'无题'
+	else:
+		['沙海1','荒沙诡影','第九章','吴邪的故事（一）']
+		info[0]+info[1]
+		info[2]
+		info[3]
+10、scrapy shell使用
+  * scrapy shell URL地址
+
+
+
+
+
+
+
+
+
+
+
+
+

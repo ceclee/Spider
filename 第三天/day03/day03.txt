@@ -1,0 +1,183 @@
+Day02回顾
+1、爬取网站思路
+  1、找URL规律
+  2、写正则表达式
+  3、设计程序框架
+  4、补全代码
+2、csv模块
+  import csv
+  with open('test.csv','w',newline='') as f:
+      writer = csv.writer(f)
+      writer.writerow([])
+3、MySQL数据库流程
+  1、db = pymysql.connect('IP',...)
+  2、cursor = db.cursor()
+  3、cursor.execute('SQL命令',[])
+  4、db.commit()
+  5、cursor.close()
+  6、db.close()
+4、MongoDB流程
+  1、conn = pymongo.MongoClient('IP',27017)
+  2、db = conn['库名']
+  3、myset = db['集合名']
+  4、myset.insert_one({})
+  ***命令行操作***
+  >>>show dbs
+  >>>use 库名
+  >>>show collections  或者 show tables
+  >>>db.集合名.find().pretty()
+  >>>db.集合名.count()
+  >>>db.dropDatabase()
+5、requests.get(url,headers=headers)
+   向网站发起请求并获取响应对象
+   1、响应对象(res)属性
+     res.encoding = 'utf-8'
+     res.text
+     res.content
+     status_code
+   2、非结构化数据保存
+     html = res.content
+     with open('***.jpg','wb') as f:
+         f.write(html)
+*******************************************
+Day03笔记
+1、腾讯招聘作业
+2、requests.get()方法参数
+  1、查询参数(params) ：字典
+     res=requests.get(url,params=params,headers=..)
+     * 自动对params字典编码,然后和url拼接,发请求
+     示例：输入百度搜索内容,爬取第2页数据
+  2、代理参数(proxies)：字典
+    1、获取代理IP的网站
+       西刺代理
+       快代理
+       全网代理
+    2、普通代理
+      1、格式 ：proxies={'协议':'协议://IP:端口号'}
+         proxies = {
+            'http':'http://159.224.13.29:61366',
+            'https':'https://159.224.13.29:61366'
+           }
+	 requests.get(url,headers=headers,proxies=proxies)
+      2、测试网站
+         1、http://httpbin.org/get
+	 2、https://whatismyip.com
+    3、私密代理
+      1、格式
+        {'协议':'协议://用户名:密码@IP:端口号'}
+        proxies = {
+          'http':'http://309435365:szayclhp@116.255.191.105:16816'
+        }
+  3、Web客户端验证(auth) ：元组
+    1、auth = ('用户名','密码')
+       auth = ('tarenacode','code_2013')
+    2、下载笔记网站(04_笔记下载.py)
+      1、URL ：http://code.tarena.com.cn/
+      2、正则：
+        <a href="(.*?)/.*?</a>
+  4、SSL证书认证(verify)
+    1、verify = True ：默认,进行SSL证书认证
+       verify = False：不对URL做认证
+       ** 针对于没有做证书认证的 https 的网站 **
+    2、res = requests.get(url,...,verify=False)
+    3、抛出异常 ：SSLError
+       解决异常 ：添加参数verify=False
+  5、timeout
+3、requests.post()
+  1、requests.post(url,data=data,headers=headers)
+  2、data ：字典,Form表单数据(不用编码)
+4、有道翻译破解案例(post)
+************************************************
+1、xpath解析模块
+  1、在XML文档中查找信息的语言,同样适用于HTML文档的检索
+  2、xpath辅助工具
+    1、Chrome插件 ：Xpath Helper
+       打开/关闭 ：ctrl + shift + x
+    2、Firefox插件：Xpath Checker
+    3、xpath编辑工具：XML Quire
+  3、浏览器插件xpath helper安装
+    ** 方法一 **
+      把 插件.crx 鼠标拖拽到 浏览器开发者模式释放
+    ** 方法二 **
+    1、把 插件.crx 改为 .rar
+    2、解压 插件.rar 解压到当前文件夹
+    3、浏览器-更多工具-扩展程序-开发者模式-加载已解压的扩展程序-选择(解压的路径文件夹)
+    4、重启浏览器
+  4、xpath匹配演示
+    1、查找所有的book节点 ：//book
+    2、查找所有book下title子节点中,lang属性值为'en'的节点
+      //book/title[@lang="en"]
+    3、查找bookstore下的第2个book节点下title子节点
+      //bookstore/book[2]/title
+    4、查找所有book/title中lang属性的值
+      //book/title/@lang
+  5、选取节点
+    1、// ：所有节点中查找
+            //price  //book//price
+    2、@  ：获取节点属性值
+          **条件: //div[@class="movie-item-info">]
+	  **取值: //div//a/@src
+    3、|  ：匹配多路径
+            xpath表达式1 | xpath表达式2
+	  //tr[@class="even"] | //tr[@class="odd"]
+  6、函数
+    1、contains()
+       匹配一个属性值中包含某些字符串的节点
+       //title[contains(@lang,'e')]
+       //div[contains(@id,'qiushi_tag_')]
+    2、text() ：获取文本
+       //book/title/text()
+2、lxml库及xpath使用
+  1、lxml安装 ：sudo pip3 install lxml
+  2、使用流程
+     1、导模块 ：from lxml import etree
+     2、创建解析对象 ：parse_html=etree.HTML(html)
+     3、调用xpath匹配
+        r_list=parse_html.xpath('xpath表达式')
+     *** 只要调用了xpath,结果一定是列表 ***
+3、腾讯招聘案例(xpath)
+  1、基准xpath表达式 ：匹配所有职位的节点对象(tr)
+     //tr[@class="even"] | //tr[@class="odd"]
+  2、for循环拿出每一个节点对象,做数据提取
+     for tr in [节点对象1,节点对象2,...]:
+         job_link = tr.xpath('./td[1]/a/@href')
+	 job_name = tr.xpath('./td[1]/a/text()')
+	 job_type = tr.xpath('./td[2]/text()')
+	 job_number = tr.xpath('./td[3]/text()')
+	 job_address = tr.xpath('./td[4]/text()')
+	 job_time = tr.xpath('./td[5]/text()')
+       
+作业1：
+糗事百科
+  1、URL地址 ：百度糗事百科 - 文字 
+  2、目标 
+     1、用户昵称
+     2、段子内容
+     3、好笑数量
+     4、评论数量
+  **** 温馨提示 ****
+  1、基准xpath,匹配出所有段子的节点对象(contains)
+  2、for循环......
+作业2：
+  1、猫眼电影,用xpath实现
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

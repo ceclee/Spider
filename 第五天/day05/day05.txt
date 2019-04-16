@@ -1,0 +1,175 @@
+﻿Day04回顾
+1、requests.get()
+  1、url
+  2、params
+  3、proxies
+  4、auth
+  5、verify
+  6、headers
+  7、timeout
+2、requests.post()
+  1、url
+  2、data ：字典(Form Data)
+  3、headers
+3、处理常见反爬
+  1、请求头headers
+     添加User-Agent、Referer、Cookie
+  2、使用代理IP
+  3、JS加密(抓取JS文件,找到加密方式,用Python按同样方式加密即可)
+**********************************************
+1、模拟登陆(cookie)
+  1、什么是cookie、session
+    cookie ：通过在客户端记录的信息确定用户身份
+    session：通过在服务端记录的信息确定用户身份
+2、模拟登陆人人网(方法1)
+  ** 先登录成功1次,抓取到cookie **
+  ** F12开启抓包,找到 home ,获取Request Headers **
+  ** headers可定义大字典全写,也可只写3个尝试 **
+  url = 'http://www.renren.com/967469305/profile'
+  headers = {
+	'Cookie': 'anonymid=ju0kshb9yeznc3; _r01_=1; depovince=BJ; JSESSIONID=abcb1lP3rVpdP67B8K6Nw; ick_login=42925146-a68e-4106-b250-82992bd13920; first_login_flag=1; ln_uact=13603263409; ln_hurl=http://hdn.xnimg.cn/photos/hdn221/20181101/1550/h_main_qz3H_61ec0009c3901986.jpg; jebe_key=1bd12da2-0649-43e0-8321-11b1bb27dee3%7C2012cb2155debcd0710a4bf5a73220e8%7C1554687212044%7C1%7C1554687212366; wp_fold=0; td_cookie=18446744070033157627; jebecookies=2eb13869-af73-48c8-a36e-c59c9d974a9a|||||; _de=4DBCFCC17D9E50C8C92BCDC45CC5C3B7; p=5b272ecf6801b5d160db5fe3aa5ad9965; t=34f7cff0d5a364c022197cf286ffca755; societyguester=34f7cff0d5a364c022197cf286ffca755; id=967469305; xnsid=5665706; loginfrom=syshome',
+	'Referer': 'http://www.renren.com/SysHome.do',
+	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'
+  }
+3、模拟登陆人人网(方法2)
+   ** 使用session会话保持 **
+   1、session会话使用步骤
+      1、实例化一个session对象
+         session = requests.session()
+      2、让session对象发送请求(get、post)
+	 res = session.get(url,headers=headers)
+   2、实现步骤
+     1、找到登陆时发送用户名密码的URL地址
+        ** 右键,检查输入框位置,找Form表单中action**
+	** 右键,查看网页源代码,搜form,找action **
+	** 构造表单中用户名、密码input标签name值作为键,真正的用户名密码作为值,构成post的请求体data **
+     2、定义post的数据为字典  
+        {"email":"","password":""}
+     3、实例化session对象,发请求
+	## 第1步 ：把用户名和密码信息发给服务器
+	post_url = "http://www.renren.com/PLogin.do"
+	data = {"email":"13603263409","password":""}
+	## 第2步 ：访问个人主页(第1步已经有了cookie)
+4、Ajax动态加载网站数据抓取
+  1、特点 ：滚动鼠标滑轮加载,页面局部刷新
+  2、目标 ：电影名称、评分
+  3、F12/抓包工具(XHR抓异步加载)
+    1、Request URL ：GET的地址(JSON)
+    2、Query String：查询参数
+  4、抓取到的URL地址 和 查询参数
+    https://movie.douban.com/j/chart/top_list?type=11&interval_id=100%3A90&action=&start=20&limit=20
+
+    type: 11
+    interval_id: 100:90
+    action: 
+    start: 20
+    limit: 20
+5、Fiddler抓包工具抓包配置
+  1、配置Fiddler
+    ** Tools - options
+       HTTPS选项卡-Decrypt Https Traffic(添加信任)
+       ...from browsers only
+    ** Connections选项卡 
+       监听端口：8888
+    ** 重启Fiddler(重要)
+  2、配置历览器代理
+    ** 浏览器右上角,SwitchOmega-选项-新建情景模式->AID1811->创建
+    ** HTTP://   127.0.0.1   8888
+    ** 点击 应用选项
+    ** 点击 SwitchOmega可切换代理
+6、Fiddler常用菜单
+  1、Inspectors ：查看抓到的数据包的详细内容
+     整体分为 请求 和 响应 两部分
+  2、常用菜单
+     **Headers 
+     **WebForms ：显示POST的数据<body>中
+     **Raw ：将整个请求显示为纯文本
+  3、****注意****
+    1、POST有道翻译
+       * Raw(post地址)
+       * WebForms -> <body>(Form表单数据)
+    2、Ajax动态加载
+       * Raw(json文件地址)
+       * WebForms -> <QueryString(查询参数)
+7、selenium + phantomjs/Chrome网络爬虫组合
+  1、selenium
+    * Web自动化测试工具,用于Web自动化测试
+    * 可运行在浏览器上,根据指令操作浏览器,让浏览器自动加载页面
+    * 只是工具,必须与第三方浏览器结合使用
+    * sudo pip3 install selenium
+  2、phantomjs浏览器
+    * 无界面浏览器(无头浏览器)
+    * 在内存进行页面加载,运行高效
+8、chromedriver安装
+  1、下载
+    https://chromedriver.storage.googleapis.com/index.html
+  2、安装
+    * 查看本机chrome浏览器版本(设置-帮助-关于...)
+    * 下载对应版本的chromedriver.exe(notes.txt)
+    * 拷贝到python安装目录的Scripts目录下
+
+9、chromedriver设置无界面模式
+   * options = webdriver.ChromeOptions()
+   * options.set_headless()
+   * driver = webdriver.Chrome(options=options)
+ 
+   方法2：options = webdriver.ChromeOptions()
+	options.add_argument('--headless')
+	driver = webdriver.Chrome(options=options)
+
+10、常用方法
+  1、浏览器对象(driver)
+     * driver.get(url)
+     * driver.page_source ：查看网页源码
+     * driver.page_source.find('字符串')
+         作用 ：从html源码中搜索指定字符串
+	 返回值: -1 查找失败
+     * driver.close() ：退出当前页
+     * driver.quit()  ：关闭浏览器
+     * driver.switch_to.frame(节点对象)
+         作用 ：切换到子框架
+  2、定位节点
+    1、单元素查找(只匹配第一个节点)
+       * driver.find_element_by_id('')
+       * driver.find_element_by_name('')
+       * driver.find_element_by_class_name('')
+       * driver.find_element_by_xpath('')
+    2、多元素查找
+       * driver.find_elements_by_...()
+  3、节点对象操作
+     * ele.send_keys('') ：给输入框赋值
+     * ele.click()
+     * ele.text ：获取节点对象文本内容
+     * ele.get_attribute('href') ：获取节点属性值
+11、qq邮箱登陆(switch_to.frame(...))    
+   * url   :     https://mail.qq.com/
+   * frame :     id ：login_frame
+   * username：  id : u
+   * password：  id : p 
+   * 登录按钮：  id : login_button
+12、京东商品抓取
+  1、网址 ：https://www.jd.com/
+  2、目标 ：输入搜索商品
+     * 商品名称
+     * 商品价格
+     * 评论数量
+     * 商家名称 
+** driver.execute_script(
+   'window.scrollTo(0,document.body.scrollHeight)'
+   )
+作业 ：更改豆瓣电影案例
+	************************
+	*  剧情 |  喜剧 | 爱情 *
+	*************************
+       请输入要爬取的电影类型:
+       请输入要爬取的电影数量:
+
+       爬下来的数据存放到MySQL数据库
+
+安装scrapy框架
+
+
+
+
+
+

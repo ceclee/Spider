@@ -1,0 +1,104 @@
+第二天
+
+html = '''
+<div class='animal'>
+    <p class='name'>
+        <a title='Tiger'></a>
+    </p>
+
+    <p class='content'>
+        Two Tiger 
+    </p>
+</div>
+<div class='animal'>
+    <p class='name'>
+        <a title='rabbit'></a>
+    </p>
+
+    <p class='content'>
+        small white rabbit white and white
+    </p>
+</div>'''
+
+1.csv模块使用流程
+    1.导入模块
+	import csv
+    2.打开文件（xxx.csv）
+        with open('xxx.csv','a') as f:
+	    #初始化写入对象
+	    writer = csv.writer(f)
+	    #写入数据
+	    writer.writerow(['张国立'，'29'])
+    3.注意：Windows下会出现空行，使用newline参数（with open('老师.csv','w',newline='') as f）
+
+猫眼电影top100榜单：
+	步骤：
+		1.找URL规律
+
+		2.写正则表达式
+		
+
+2.数据持久化存储
+	1.pymongo回顾（三个对象）
+		conn = pymongo.MongoClient('IP地址'，27017)
+		db = conn['库名']
+		myset = db['集合名']
+		myset.insert_one({})
+           ****************************
+	   >>show dbs
+	   >>use 库名
+	   >>show collections
+	   >> db.集合名.find()
+	   >>db.
+	2.pymysql回顾
+	     1.创建连接对象:db = pymysql.connect(``)
+	     2.创建游标对象:cursor = db.cursor
+	     3.执行命令: cursor.execute('')
+	     4.提交到数据库执行:db.commit()
+	     5.关闭:cursor.close();db.close()
+	3.warnings模块
+	  import warnings  #过滤警告
+	  warning.filterwarnings('ignore')
+5.猫眼电影存入Mysql数据库     补笔记！！！！！！！！！！！！！！！！
+	3.SQL查询 ？？？？？？补笔记！！！！！
+	
+6.requests模块
+	1.安装：ubuntu----sudo pip3 install requests
+	      windows---python -m pip install requests
+	2.方法：
+		requests.get(url,headers=headers)
+		作用：向网站直接发起请求，并获取响应对象
+	3.响应对象（res）属性
+		1.res.text: 获取响应内容（字符串）
+		2.res.content：响应内容（bytes）
+		3.res.status_code:HTTP响应码
+		4.res.encoding = 'utf-8'
+	4.非结构化数据爬取
+		html = res.content
+		with open('赵丽颖.jpg','wb') as f:
+			f.write(html)
+
+7.抓取腾讯招聘的案例                             补笔记！！！！
+	1.网址：腾讯招聘--社会--搜索
+	2.目标：
+	    *****一级界面*****
+	    1.职位的名称
+	    2.职位的类别
+	    3.招聘人数
+	    4.招聘地点
+	    5.发布时间
+	    6.职位链接
+	    *****二级界面*****
+	    7.岗位职责
+	    8.工作要求
+	3.程序实现步骤
+	    1.找url规律
+	    https://hr.tencent.com/position.php?&start=0
+	    https://hr.tencent.com/position.php?&start=10
+	    `
+	    `
+	    `
+	    2.一级页面正则表达式	
+	    3.二级页面正则表达式
+	    4.设计程序框架
+	    

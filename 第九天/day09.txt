@@ -1,0 +1,232 @@
+Day08回顾
+1、MongoDB持久化存储
+  * setting.py设置相关变量
+  * pipelines.py自定义管道类
+    class CsdnMongoPipeline(object):
+        def __init__(self):
+	    pass
+        def process_item(self,item,spider):
+	    return item
+	# 爬虫程序结束时执行的方法
+	def close_spider(self,spider):
+	    pass
+  * settings.py中开启管道
+    ITME_PIPELINES = {
+      'Csdn.pipelines.CsdnMongoPipeline':1000
+      }
+2、远程连接MySQL
+  1、开启远程连接
+     * sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf
+       # bind-address=127.0.0.1
+     * /etc/init.d/mysql restart
+  2、添加授权用户
+    mysql>grant all privileges on *.* to '用户名'@'%' identified by '密码' with grant option;
+    mysql>flush privileges;
+3、Ubuntu中防火墙(ufw)操作
+   * sudo ufw stats | enable | disable | allow 端口
+4、保存为csv、json文件
+   * scrapy crawl 爬虫名 -o xxx.json/xxx.csv
+   * settings.py ：FEED_EXPORT_ENCODING = 'utf-8'
+5、图片管道类
+   * items.py 
+     img_link = scrapy.Field()
+   * pipelines.py
+     from scrapy.pipelines.images import ImagesPipeline
+     import scrapy
+     class SoPipeline(ImagesPipeline):
+         # 重写方法
+	 def get_media_requests(self,item,info):
+	     yield scrapy.Request(img['img_link'])
+   * settings.py
+     IMAGES_STORE = '/home/tarena/images'
+     IMAGES_STORE = 'D:\\So\\images'
+6、爬虫文件重写start_requests()方法
+   * 特点 ：不再爬取start_urls的地址
+   * 流程
+     ** 把start_urls去掉
+     ** def start_requests(self):
+            pass
+*******************************************
+Day09笔记
+1、scrapy shell使用 ：scrapy shell URL地址
+  1、请求属性(request)
+     * request.headers ：请求头(字典)
+     * request.meta
+       * 设置代理：meta={'proxy':'http://IP:端口'}
+       * 传递item对象：meta={'item':item}
+     * request.url 
+  2、响应属性(response)
+     * reponse.text ：字符串
+     * reponse.body ：字节流
+     * response.meta：
+     * response.headers ：响应头
+     * response.xpath('')
+2、scrapy.Request()参数
+  * url
+  * callback
+  * meta
+  * headers
+  * dont_filter ：是否忽略域组限制
+    False(默认) ：检查allowed_domains中域名
+    True        ：忽略allowed_domains中域名
+3、下载器中间件(随机User-Agent)
+  1、以前settings.py和Request()方法中定义
+     ** 少量User-Agent **
+     * USER_AGENT = 'Mozilla/5.0'
+     * DEFAULT_REQUEST_HEADERS = {'User-Agent':''}
+     * yiled scrapy.Request(url,headers={'':''})
+  2、现在middlewares.py设置中间件
+     * 新建useragents.py存放User-Agent
+     * middlewares.py设置类
+       class RandomUaMiddleware(object):
+         def process_request(self,request,spider):
+	   request.headers['User-Agent'] = ...
+  3、settings.py
+     * DOWNLOADER_MIDDLEWARES={
+	'Middle.middlewares.RandomUaMiddleware':1
+       }
+4、下载器中间件(随机代理)
+  * request.meta['proxy'] = ...
+5、机器视觉与tesseract(验证码)
+  1、OCR ：光学字符识别,通过字符形状转为电子文本
+  2、tesseract-ocr(OCR的一个底层识别库,不能import)
+     sudo apt-get install tesseract-ocr
+  3、tesseract识别(和Python无关)
+     终端 ：tesseract yzm.jpg result.txt
+6、pytesseract模块
+  1、安装 ：sudo pip3 install pytesseract
+7、在线打码平台
+  1、tesseract-ocr识别率低,很多文字变形,干扰,导致无法识别
+  2、在线打码
+    * 云打码 ：http://www.yundama.com/
+8、分布式爬虫
+  1、原理 ：多台主机共享1个爬取队列
+  2、实现 ：重写Scrapy的调度器(scrapy_redis模块)
+     安装 ：sudo pip3 install scrapy_redis
+  3、为什么使用redis
+     1、Redis非关系型数据库,基于key-value形式存储
+     2、Redis集合,存储每个request的指纹
+     3、基于内存,快
+9、GitHub,搜索：scrapy_redis,查看：
+   * 使用scrapy_redis调度器
+   SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+   * 使用scrapy_redis去重机制
+   DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+   * 管道,把数据存入Redis数据库
+   ITEM_PIPELINES = {
+      'scrapy_redis.pipelines.RedisPipeline': 300
+    }
+10、腾讯招聘案例分布式(在Ubuntu操作系统中操作)
+  1、在settings.py中添加相关变量
+     1、使用scrapy_redis调度器
+     SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+     2、使用scrapy_redis去重机制
+     DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+     3、管道,把数据存入Redis数据库
+     ITEM_PIPELINES = {
+        'scrapy_redis.pipelines.RedisPipeline': 300}
+     4、REDIS_HOST = 'Windows的IP'
+     5、REDIS_PORT = 6379
+     6、爬取结束后不清除指纹
+        SCHEDULER_PERSIST = True
+  2、运行爬虫,数据会存储到Windows中Redis数据库
+     tecent:dupefilter ：请求指纹
+     tencent:items     ：抓取的数据
+     tencent:requests  ：请求头信息
+11、腾讯招聘案例数据存入mongodb数据库
+  1、把ITME_PIPELINES管道设置为mongodb管道,IP地址改为Ubuntu系统IP地址
+  2、把代码拷贝一份到Windows上
+  3、两台电脑同时启动爬虫,同时抓取数据到mongodb
+12、使用redis_key改写,同时存入mongodb
+  1、在11步基础上改写爬虫文件 tencent.py
+  *  from scrapy_redis.spiders import RedisSpider
+  *  修改继承类
+     class TencentSpider(RedisSpider):
+        * 去掉start_urls
+	* 添加redis_key
+	  redis_key = 'tencentspider:start_urls'
+  2、多台机器同时启动爬虫项目,等待redis发指令
+  3、进入redis客户端
+     redis-cli.exe
+     >>>lpush tencentspider:start_urls https://hr.tencent.com/position.php?start=0
+13、手机app端抓取
+  1、设置手机
+     1、设置无线DHCP服务为手动
+        IP ：电脑IP
+	端口 ：8888
+     2、手机打开浏览器,输入：http://电脑IP:8888 下载证书并安装
+  2、设置电脑(见图,更改注册表)
+  3、设置Fiddler
+    1、Tools-Options
+    * HTTP选项卡 ： ...from all processes
+    * Connections选项卡
+      端口号 ：8888(一般默认为8888)
+      allow remote computers to Connect
+  4、重启Fiddler
+
+
+
+
+
+  
+
+
+
+
+1、解压后进入到 64bit 文件夹
+2、cmd终端 ：
+   d:
+   cd 路径/64bit
+   redis-server.exe redis.conf
+3、图形界面,左下角 + 
+   127.0.0.1
+   127.0.0.1
+   test测试
+***如果失败***
+   * 重启redis服务
+   * 关闭windows防火墙
+
+
+
+
+
+
+
+
+
+
+
+
+yield scrapy.Request(
+	url,
+	meta={'item':item,'proxy':'http://'},
+	callback=...,
+	headers={}
+	)
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
